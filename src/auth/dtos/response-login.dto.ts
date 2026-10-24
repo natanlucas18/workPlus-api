@@ -1,3 +1,5 @@
+import { Company } from 'src/company/entities/company.entity';
+
 export class ResponseLoginDto {
   auth: {
     accessToken: string;
@@ -9,5 +11,6 @@ export class ResponseLoginDto {
     name: string;
     email: string;
     role: 'supervisor' | 'rh' | 'manager' | 'super_admin';
+    company: Company;
   };
 }
