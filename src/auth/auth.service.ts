@@ -85,6 +85,8 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role,
+        companyId: user.company.id,
+        companyName: user.company.name,
       },
       {
         audience: this.jwtConfigurations.audience,
@@ -122,6 +124,7 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role,
+        company: user.company,
       },
     };
   }
