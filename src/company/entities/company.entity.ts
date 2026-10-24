@@ -1,8 +1,10 @@
+import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   Index,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -17,4 +19,10 @@ export class Company {
 
   @CreateDateColumn()
   createdAt?: Date;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @OneToMany(() => User, (user) => user.company)
+  users: User[];
 }

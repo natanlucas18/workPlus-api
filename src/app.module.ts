@@ -3,6 +3,9 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import globalConfig from './global.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CompanyModule } from './company/company.module';
+import { UserModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -31,6 +34,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         };
       },
     }),
+    CompanyModule,
+    UserModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
