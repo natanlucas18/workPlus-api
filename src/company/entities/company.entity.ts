@@ -1,5 +1,6 @@
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
+import { WorkStation } from 'src/work-stations/entities/work-station.entity';
 import {
   Column,
   CreateDateColumn,
@@ -29,4 +30,7 @@ export class Company {
 
   @OneToMany(() => Employee, (employee) => employee.company)
   employees: Employee[];
+
+  @OneToMany(() => WorkStation, (workStation) => workStation.company)
+  workStations: WorkStation[];
 }
