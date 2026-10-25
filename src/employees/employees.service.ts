@@ -12,6 +12,7 @@ import { ResponseDto } from 'src/common/dtos/response.dto';
 import { CreateEmployeeDto } from './dtos/create-employee.dto';
 import { isUniqueViolation } from 'src/database/utils/is-unique-violation';
 import { UpdateEmployeeDto } from './dtos/update-employee.dto';
+import { EmployeeResponseDto } from './dtos/employee-response.dto';
 
 @Injectable()
 export class EmployeesService {
@@ -23,11 +24,7 @@ export class EmployeesService {
   async create(
     createEmployeeDto: CreateEmployeeDto,
     companyId: string,
-  ): Promise<
-    ResponseDto<
-      Pick<Employee, 'id' | 'registration' | 'name' | 'dateOfBirth' | 'shift'>
-    >
-  > {
+  ): Promise<ResponseDto<EmployeeResponseDto>> {
     try {
       const employeeData = this.employeeRepository.create({
         registration: createEmployeeDto.registration,
@@ -107,11 +104,7 @@ export class EmployeesService {
   async findOne(
     id: string,
     companyId: string,
-  ): Promise<
-    ResponseDto<
-      Pick<Employee, 'id' | 'registration' | 'name' | 'dateOfBirth' | 'shift'>
-    >
-  > {
+  ): Promise<ResponseDto<EmployeeResponseDto>> {
     const employee = await this.employeeRepository.findOne({
       where: { id, company: { id: companyId } },
     });
@@ -135,11 +128,7 @@ export class EmployeesService {
     id: string,
     updateEmployeeDto: UpdateEmployeeDto,
     companyId: string,
-  ): Promise<
-    ResponseDto<
-      Pick<Employee, 'id' | 'registration' | 'name' | 'dateOfBirth' | 'shift'>
-    >
-  > {
+  ): Promise<ResponseDto<EmployeeResponseDto>> {
     const employee = await this.employeeRepository.findOne({
       where: {
         id,
@@ -181,11 +170,7 @@ export class EmployeesService {
   async remove(
     id: string,
     companyId: string,
-  ): Promise<
-    ResponseDto<
-      Pick<Employee, 'id' | 'registration' | 'name' | 'dateOfBirth' | 'shift'>
-    >
-  > {
+  ): Promise<ResponseDto<EmployeeResponseDto>> {
     const employee = await this.employeeRepository.findOne({
       where: { id, company: { id: companyId } },
     });

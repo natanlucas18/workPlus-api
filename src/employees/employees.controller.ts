@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -27,61 +28,55 @@ export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
   @Roles('rh', 'manager', 'super_admin')
-  @HttpCode(HttpStatus.CREATED)
   @Post()
   create(
     @Body() createEmployeeDto: CreateEmployeeDto,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
   ) {
-    const companyId = tokenPayloadDto.companyId;
-    return this.employeesService.create(createEmployeeDto, companyId);
+    return this.employeesService.create(
+      createEmployeeDto,
+      tokenPayloadDto.companyId,
+    );
   }
 
   @Roles('supervisor', 'rh', 'manager', 'super_admin')
-  @HttpCode(HttpStatus.OK)
   @Get()
   findAll(
     @Query() query: PaginatedQueryDto,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
   ) {
-    const companyId = tokenPayloadDto.companyId;
-    return this.employeesService.findAll(query, companyId);
+    return this.employeesService.findAll(query, tokenPayloadDto.companyId);
   }
 
   @Roles('supervisor', 'rh', 'manager', 'super_admin')
-  @HttpCode(HttpStatus.OK)
   @Get(':id')
   findOne(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
   ) {
-    const companyId = tokenPayloadDto.companyId;
-
-    return this.employeesService.findOne(id, companyId);
+    return this.employeesService.findOne(id, tokenPayloadDto.companyId);
   }
 
   @Roles('rh', 'manager', 'super_admin')
-  @HttpCode(HttpStatus.OK)
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateEmployeeDto: UpdateEmployeeDto,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
   ) {
-    const companyId = tokenPayloadDto.companyId;
-
-    return this.employeesService.update(id, updateEmployeeDto, companyId);
+    return this.employeesService.update(
+      id,
+      updateEmployeeDto,
+      tokenPayloadDto.companyId,
+    );
   }
 
   @Roles('rh', 'manager', 'super_admin')
-  @HttpCode(HttpStatus.OK)
   @Delete(':id')
   remove(
-    @Param(':id') id: string,
+    @Param(':id', new ParseUUIDPipe()) id: string,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
   ) {
-    const companyId = tokenPayloadDto.companyId;
-
-    return this.employeesService.remove(id, companyId);
+    return this.employeesService.remove(id, tokenPayloadDto.companyId);
   }
 }
