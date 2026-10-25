@@ -13,6 +13,7 @@ import { ResponseDto } from 'src/common/dtos/response.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { isUniqueViolation } from 'src/database/utils/is-unique-violation';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { UserResponseDto } from './dtos/user-response.dto';
 
 @Injectable()
 export class UserService {
@@ -93,9 +94,7 @@ export class UserService {
   async create(
     createUserDto: CreateUserDto,
     companyId: string,
-  ): Promise<
-    ResponseDto<Pick<User, 'id' | 'name' | 'email' | 'role' | 'company'>>
-  > {
+  ): Promise<ResponseDto<UserResponseDto>> {
     try {
       const passwordHash = await this.hashingService.hash(
         createUserDto.password,
@@ -131,9 +130,7 @@ export class UserService {
   async update(
     id: string,
     updateUserDto: UpdateUserDto,
-  ): Promise<
-    ResponseDto<Pick<User, 'id' | 'name' | 'email' | 'role' | 'company'>>
-  > {
+  ): Promise<ResponseDto<UserResponseDto>> {
     try {
       const userData = {
         name: updateUserDto?.name,
@@ -180,9 +177,7 @@ export class UserService {
   async remove(
     id: string,
     companyId: string,
-  ): Promise<
-    ResponseDto<Pick<User, 'id' | 'name' | 'email' | 'role' | 'company'>>
-  > {
+  ): Promise<ResponseDto<UserResponseDto>> {
     const user = await this.userRepository.findOne({
       where: { id, company: { id: companyId } },
     });
