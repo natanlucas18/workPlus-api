@@ -26,11 +26,11 @@ export class WorkStationsService {
     companyId: string,
   ): Promise<ResponseDto<WorkStationResponseDto>> {
     try {
-      const workStationData = {
+      const workStationData = this.workStationRepo.create({
         name: createWorkStationDto.name,
         supervisor: createWorkStationDto.supervisor,
         company: { id: companyId },
-      };
+      });
 
       const newWorkStation = await this.workStationRepo.save(workStationData);
 

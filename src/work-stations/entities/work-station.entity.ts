@@ -1,3 +1,4 @@
+import { Activity } from 'src/activities/entities/activity.entity';
 import { Company } from 'src/company/entities/company.entity';
 import {
   Column,
@@ -6,6 +7,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -29,4 +31,7 @@ export class WorkStation {
   @ManyToOne(() => Company, (company) => company.workStations)
   @JoinColumn({ name: 'company_id' })
   company: Company;
+
+  @OneToMany(() => Activity, (activity) => activity.workStation)
+  activities: Activity[];
 }
