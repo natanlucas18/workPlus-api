@@ -1,3 +1,4 @@
+import { Activity } from 'src/activities/entities/activity.entity';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { WorkStation } from 'src/work-stations/entities/work-station.entity';
@@ -33,4 +34,7 @@ export class Company {
 
   @OneToMany(() => WorkStation, (workStation) => workStation.company)
   workStations: WorkStation[];
+
+  @OneToMany(() => Activity, (activity) => activity.company)
+  activities: Activity[];
 }
