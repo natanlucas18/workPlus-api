@@ -8,6 +8,7 @@ import { UserModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EmployeesModule } from './employees/employees.module';
 import { WorkStationsModule } from './work-stations/work-stations.module';
+import { ActivitiesModule } from './activities/activities.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { WorkStationsModule } from './work-stations/work-stations.module';
     AuthModule,
     EmployeesModule,
     WorkStationsModule,
+    ActivitiesModule,
   ],
   controllers: [],
   providers: [],
