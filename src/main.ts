@@ -17,7 +17,11 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
+
   app.use(cookieParser());
+
+  app.setGlobalPrefix('api/v1');
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
