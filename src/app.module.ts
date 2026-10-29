@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { EmployeesModule } from './employees/employees.module';
 import { WorkStationsModule } from './work-stations/work-stations.module';
 import { ActivitiesModule } from './activities/activities.module';
+import { PayPeriodsModule } from './pay-periods/pay-periods.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ActivitiesModule } from './activities/activities.module';
     EmployeesModule,
     WorkStationsModule,
     ActivitiesModule,
+    PayPeriodsModule,
   ],
   controllers: [],
   providers: [],
