@@ -1,10 +1,12 @@
 import { Company } from 'src/company/entities/company.entity';
+import { ExtraEarning } from 'src/extra-earnings/entities/extra-earnings.entity';
 import {
   Column,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -34,4 +36,7 @@ export class User {
   })
   @JoinColumn({ name: 'company_id' })
   company: Company;
+
+  @OneToMany(() => ExtraEarning, (extraEarnings) => extraEarnings.addedBy)
+  extraEarnings: ExtraEarning[];
 }

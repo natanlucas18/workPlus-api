@@ -1,5 +1,6 @@
 import { Company } from 'src/company/entities/company.entity';
 import { EmployeeShift } from 'src/enums/employee-shift.enum';
+import { ExtraEarning } from 'src/extra-earnings/entities/extra-earnings.entity';
 import {
   Column,
   DeleteDateColumn,
@@ -7,6 +8,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -40,4 +42,7 @@ export class Employee {
   @ManyToOne(() => Company, (company) => company.employees)
   @JoinColumn({ name: 'company_id' })
   company: Company;
+
+  @OneToMany(() => ExtraEarning, (extraEarnings) => extraEarnings.employee)
+  extraEarnings: ExtraEarning[];
 }

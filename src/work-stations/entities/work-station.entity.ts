@@ -1,5 +1,6 @@
 import { Activity } from 'src/activities/entities/activity.entity';
 import { Company } from 'src/company/entities/company.entity';
+import { ExtraEarning } from 'src/extra-earnings/entities/extra-earnings.entity';
 import {
   Column,
   DeleteDateColumn,
@@ -34,4 +35,7 @@ export class WorkStation {
 
   @OneToMany(() => Activity, (activity) => activity.workStation)
   activities: Activity[];
+
+  @OneToMany(() => ExtraEarning, (extraEarnings) => extraEarnings.workStation)
+  extraEarnings: ExtraEarning[];
 }
