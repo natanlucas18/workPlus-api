@@ -1,11 +1,13 @@
 import { Company } from 'src/company/entities/company.entity';
 import { PayPeriodStatus } from 'src/enums/pay-period-status.enum';
+import { ExtraEarning } from 'src/extra-earnings/entities/extra-earnings.entity';
 import {
   Column,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -36,4 +38,7 @@ export class PayPeriod {
   @ManyToOne(() => Company, (company) => company.payPeriods)
   @JoinColumn({ name: 'company_id' })
   company: Company;
+
+  @OneToMany(() => ExtraEarning, (extraEarnings) => extraEarnings.payPeriod)
+  extraEarnings: ExtraEarning[];
 }

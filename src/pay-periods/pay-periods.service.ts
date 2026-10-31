@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PayPeriod } from './entities/pay-period.entity';
-import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreatePayPeriodDto } from './dtos/create-pay-period.dto';
 import { ResponseDto } from 'src/common/dtos/response.dto';
 import { PayPeriodResponseDto } from './dtos/pay-period-response.dto';
@@ -20,6 +20,8 @@ export class PayPeriodsService {
   constructor(
     @InjectRepository(PayPeriod)
     private readonly payPeriodRepository: Repository<PayPeriod>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(
@@ -27,8 +29,8 @@ export class PayPeriodsService {
     companyId: string,
   ): Promise<ResponseDto<PayPeriodResponseDto>> {
     if (
-      new Date(createPayPeriodDto.startDate) <
-      new Date(createPayPeriodDto.endDate)
+      new Date(createPayPeriodDto.endDate) <
+      new Date(createPayPeriodDto.startDate)
     ) {
       throw new BadRequestException(
         'A data final não pode ser anterior a data inicial.',
@@ -58,7 +60,13 @@ export class PayPeriodsService {
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw new ConflictException(
-          'Já existe um período de apuração aberto nessa mesma data.',
+          'Já existe um período de pagamento aberto nessa mesma data.',
+        );
+      }
+
+      if (error.code === '23P01') {
+        throw new ConflictException(
+          'O período de pagamento possui datas sobrepostas com outro período da empresa.',
         );
       }
 
@@ -69,19 +77,27 @@ export class PayPeriodsService {
   async findAll(
     query: PaginatedQueryDto,
     companyId: string,
-  ): Promise<PaginatedResponseDto<PayPeriod>> {
+  ): Promise<PaginatedResponseDto<PayPeriodResponseDto>> {
     const page = Math.max(1, Number(query.page || 1));
     const limit = Math.min(50, Math.max(1, Number(query.limit || 10)));
     const skip = (page - 1) * limit;
 
-    const qb = await this.payPeriodRepository
-      .createQueryBuilder('pay-period')
-      .where('pay_period.company.id = :companyId', { companyId });
+    const qb = this.payPeriodRepository
+      .createQueryBuilder('pay_period')
+      .where('pay_period.company_id = :companyId', { companyId });
 
-    if (query.search) {
-      qb.andWhere('pay_period.name ILIKE :search', {
-        search: `%${query.search}%`,
-      });
+    if (query.search?.trim()) {
+      qb.andWhere(
+        `(
+        pay_period.name ILIKE :search OR
+        TO_CHAR(pay_period.startDate, 'YYYY-MM-DD') ILIKE :search OR
+        TO_CHAR(pay_period.endDate, 'YYYY-MM-DD') ILIKE :search OR
+        pay_period.status ILIKE :search
+        )`,
+        {
+          search: `%${query.search.trim()}%`,
+        },
+      );
     }
 
     const allowedSortBy = ['name', 'startDate', 'endDate', 'status'];
@@ -91,7 +107,7 @@ export class PayPeriodsService {
         ? query.sortBy
         : 'name';
 
-    const sortOrder = query.sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    const sortOrder = query.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     qb.orderBy(`pay_period.${sortBy}`, sortOrder);
 
@@ -126,7 +142,7 @@ export class PayPeriodsService {
     });
 
     if (!payPeriod) {
-      throw new NotFoundException('Período de apuração não encontrado.');
+      throw new NotFoundException('Período de pagamento não encontrado.');
     }
 
     return {
@@ -144,54 +160,38 @@ export class PayPeriodsService {
     id: string,
     companyId: string,
   ): Promise<ResponseDto<PayPeriodResponseDto>> {
-    const payPeriod = await this.payPeriodRepository.findOne({
-      where: {
-        id,
-        company: { id: companyId },
-      },
+    return this.dataSource.transaction(async (manager) => {
+      const payPeriod = await manager.findOne(PayPeriod, {
+        where: {
+          id,
+          company: { id: companyId },
+        },
+        lock: {
+          mode: 'pessimistic_write',
+        },
+      });
+
+      if (!payPeriod) {
+        throw new NotFoundException('Período de pagamento não encontrado.');
+      }
+
+      if (payPeriod.status === PayPeriodStatus.CLOSED) {
+        throw new ConflictException('Este período já está fechado.');
+      }
+
+      payPeriod.status = PayPeriodStatus.CLOSED;
+
+      const closedPeriod = await manager.save(payPeriod);
+
+      return {
+        data: {
+          id: closedPeriod.id,
+          name: closedPeriod.name,
+          startDate: closedPeriod.startDate,
+          endDate: closedPeriod.endDate,
+          status: closedPeriod.status,
+        },
+      };
     });
-
-    if (!payPeriod) {
-      throw new NotFoundException('Período de apuração não encontrado.');
-    }
-
-    if (payPeriod.status === PayPeriodStatus.CLOSED) {
-      throw new ConflictException('Este período já está fechado.');
-    }
-
-    payPeriod.status = PayPeriodStatus.CLOSED;
-
-    const closedPeriod = await this.payPeriodRepository.save(payPeriod);
-
-    return {
-      data: {
-        id: closedPeriod.id,
-        name: closedPeriod.name,
-        startDate: closedPeriod.startDate,
-        endDate: closedPeriod.endDate,
-        status: closedPeriod.status,
-      },
-    };
-  }
-
-  async validateIfOpenForDate(
-    recordDate: Date,
-    companyId: string,
-  ): Promise<void> {
-    const targetData = new Date(recordDate);
-
-    const period = await this.payPeriodRepository.findOne({
-      where: {
-        startDate: LessThanOrEqual(targetData),
-        endDate: MoreThanOrEqual(targetData),
-        company: { id: companyId },
-      },
-    });
-
-    if (period && period.status === PayPeriodStatus.CLOSED) {
-      throw new BadRequestException(
-        `Não é permitido registrar ou alterar lançamentos. O período '${period.name}' está fechado.`,
-      );
-    }
   }
 }

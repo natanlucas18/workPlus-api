@@ -1,5 +1,6 @@
 import { Activity } from 'src/activities/entities/activity.entity';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { ExtraEarning } from 'src/extra-earnings/entities/extra-earnings.entity';
 import { PayPeriod } from 'src/pay-periods/entities/pay-period.entity';
 import { User } from 'src/users/entities/user.entity';
 import { WorkStation } from 'src/work-stations/entities/work-station.entity';
@@ -41,4 +42,7 @@ export class Company {
 
   @OneToMany(() => PayPeriod, (payPeriod) => payPeriod.company)
   payPeriods: PayPeriod[];
+
+  @OneToMany(() => ExtraEarning, (extraEarnings) => extraEarnings.company)
+  extraEarnings: ExtraEarning[];
 }
