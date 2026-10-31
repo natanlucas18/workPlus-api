@@ -10,6 +10,7 @@ import { EmployeesModule } from './employees/employees.module';
 import { WorkStationsModule } from './work-stations/work-stations.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { PayPeriodsModule } from './pay-periods/pay-periods.module';
+import { ExtraEarningsModule } from './extra-earnings/extra-earnings.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { PayPeriodsModule } from './pay-periods/pay-periods.module';
     WorkStationsModule,
     ActivitiesModule,
     PayPeriodsModule,
+    ExtraEarningsModule,
   ],
   controllers: [],
   providers: [],
