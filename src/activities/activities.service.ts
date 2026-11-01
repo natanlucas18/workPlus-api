@@ -74,44 +74,55 @@ export class ActivitiesService {
   async findAll(
     query: PaginatedQueryDto,
     companyId: string,
-  ): Promise<PaginatedResponseDto<Activity>> {
+  ): Promise<PaginatedResponseDto<ActivityResponseDto>> {
     const page = Math.max(1, Number(query.page || 1));
     const limit = Math.min(50, Math.max(1, Number(query.limit || 10)));
     const skip = (page - 1) * limit;
 
-    const qb = this.activityRepository
-      .createQueryBuilder('activity')
-      .where('activity.company.id = :companyId', { companyId });
-
-    if (query.search) {
-      qb.andWhere('activity.name ILIKE :search', {
-        search: `%${query.search}%`,
-      });
-    }
-
-    const allowedSortBy = [
-      'name',
-      'description',
-      'createdAt',
-      'workStationName',
-    ];
+    const sortColumns = {
+      name: 'activity.name',
+      description: 'activity.description',
+      createdAt: 'activity.createdAt',
+      workStationName: 'workStation.name',
+    };
 
     const sortBy =
-      query.sortBy && allowedSortBy.includes(query.sortBy)
-        ? query.sortBy
-        : 'name';
+      sortColumns[query.sortBy as keyof typeof sortColumns] ?? sortColumns.name;
 
-    const sortOrder = query.sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    const qb = this.activityRepository
+      .createQueryBuilder('activity')
+      .leftJoinAndSelect('activity.workStation', 'workStation')
+      .where('activity.company_id = :companyId', { companyId });
 
-    qb.orderBy(`activity.${sortBy}`, sortOrder);
-    qb.skip(skip).take(limit);
+    if (query.search?.trim()) {
+      qb.andWhere(
+        `(
+        activity.name ILIKE :search OR
+        activity.description ILIKE :search OR
+        workStation.name ILIKE :search  
+      )`,
+        {
+          search: `%${query.search.trim()}%`,
+        },
+      );
+    }
+
+    const sortOrder = query.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    qb.orderBy(sortBy, sortOrder).skip(skip).take(limit);
 
     const [data, total] = await qb.getManyAndCount();
 
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data,
+      data: data.map((item) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        workStationName: item.workStation.name,
+        createdAt: item.createdAt,
+      })),
       meta: {
         page,
         limit,
@@ -126,46 +137,57 @@ export class ActivitiesService {
   async findAllDeleted(
     query: PaginatedQueryDto,
     companyId: string,
-  ): Promise<PaginatedResponseDto<Activity>> {
+  ): Promise<PaginatedResponseDto<ActivityResponseDto>> {
     const page = Math.max(1, Number(query.page || 1));
     const limit = Math.min(50, Math.max(1, Number(query.limit || 10)));
     const skip = (page - 1) * limit;
 
+    const sortColumns = {
+      name: 'activity.name',
+      description: 'activity.description',
+      createdAt: 'activity.createdAt',
+      workStationName: 'workStation.name',
+    };
+
+    const sortBy =
+      sortColumns[query.sortBy as keyof typeof sortColumns] ?? sortColumns.name;
+
     const qb = this.activityRepository
       .createQueryBuilder('activity')
       .withDeleted()
-      .where('activity.company.id = :companyId', { companyId })
+      .leftJoinAndSelect('activity.workStation', 'workStation')
+      .where('activity.company_id = :companyId', { companyId })
       .andWhere('activity.deleted_at IS NOT NULL');
 
-    if (query.search) {
-      qb.andWhere('activity.name ILIKE :search', {
-        search: `%${query.search}%`,
-      });
+    if (query.search?.trim()) {
+      qb.andWhere(
+        `(
+        activity.name ILIKE :search OR
+        activity.description ILIKE :search OR
+        workStation.name ILIKE :search  
+      )`,
+        {
+          search: `%${query.search.trim()}%`,
+        },
+      );
     }
 
-    const allowedSortBy = [
-      'name',
-      'description',
-      'createdAt',
-      'workStationName',
-    ];
+    const sortOrder = query.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    const sortBy =
-      query.sortBy && allowedSortBy.includes(query.sortBy)
-        ? query.sortBy
-        : 'name';
-
-    const sortOrder = query.sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-
-    qb.orderBy(`activity.${sortBy}`, sortOrder);
-    qb.skip(skip).take(limit);
+    qb.orderBy(sortBy, sortOrder).skip(skip).take(limit);
 
     const [data, total] = await qb.getManyAndCount();
 
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data,
+      data: data.map((item) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        workStationName: item.workStation.name,
+        createdAt: item.createdAt,
+      })),
       meta: {
         page,
         limit,

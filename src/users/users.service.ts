@@ -16,80 +16,12 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { UserResponseDto } from './dtos/user-response.dto';
 
 @Injectable()
-export class UserService {
+export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly hashingService: HashingService,
   ) {}
-
-  async findAll(query: PaginatedQueryDto): Promise<PaginatedResponseDto<User>> {
-    const page = Math.max(1, Number(query.page) || 1);
-    const limit = Math.min(50, Math.max(1, Number(query.limit) || 10));
-    const skip = (page - 1) * limit;
-
-    const qb = this.userRepository.createQueryBuilder('user');
-
-    if (query.search) {
-      qb.andWhere('(user.name ILIKE :search)', {
-        search: `%${query.search}%`,
-      });
-    }
-
-    const allowedSortBy = ['name', 'email', 'company'];
-
-    const sortBy =
-      query.sortBy && allowedSortBy.includes(query.sortBy)
-        ? query.sortBy
-        : 'name';
-
-    const sortOrder = query.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-
-    qb.orderBy(`user.${sortBy}`, sortOrder);
-
-    qb.skip(skip).take(limit);
-
-    const [data, total] = await qb.getManyAndCount();
-
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        totalItems: total,
-        totalPages,
-        hasPreviousPage: page > 1,
-        hasNextPage: page < totalPages,
-      },
-    };
-  }
-
-  async findOne(
-    id: string,
-    companyId: string,
-  ): Promise<
-    ResponseDto<Pick<User, 'id' | 'name' | 'email' | 'role' | 'company'>>
-  > {
-    const user = await this.userRepository.findOne({
-      where: { id, company: { id: companyId } },
-    });
-
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado.');
-    }
-
-    return {
-      data: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        company: user.company,
-      },
-    };
-  }
 
   async create(
     createUserDto: CreateUserDto,
@@ -127,31 +59,184 @@ export class UserService {
     }
   }
 
+  async findAll(
+    query: PaginatedQueryDto,
+    companyId: string,
+  ): Promise<PaginatedResponseDto<User>> {
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(query.limit) || 10));
+    const skip = (page - 1) * limit;
+
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.company_id = :companyId', { companyId });
+
+    if (query.search?.trim()) {
+      qb.andWhere(`(user.name ILIKE :search OR user.email ILIKE :search)`, {
+        search: `%${query.search.trim()}%`,
+      });
+    }
+
+    const allowedSortBy = ['name', 'email'];
+
+    const sortBy =
+      query.sortBy && allowedSortBy.includes(query.sortBy)
+        ? query.sortBy
+        : 'name';
+
+    const sortOrder = query.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    qb.orderBy(`user.${sortBy}`, sortOrder);
+
+    qb.skip(skip).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        totalItems: total,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+  }
+
+  async findAllDeleted(
+    query: PaginatedQueryDto,
+    companyId: string,
+  ): Promise<PaginatedResponseDto<User>> {
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(query.limit) || 10));
+    const skip = (page - 1) * limit;
+
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .withDeleted()
+      .where('user.company_id = :companyId', { companyId })
+      .andWhere('user.deleted_at IS NOT NULL');
+
+    if (query.search?.trim()) {
+      qb.andWhere('(user.name ILIKE :search OR user.email ILIKE :search)', {
+        search: `%${query.search.trim()}%`,
+      });
+    }
+
+    const allowedSortBy = ['name', 'email'];
+
+    const sortBy =
+      query.sortBy && allowedSortBy.includes(query.sortBy)
+        ? query.sortBy
+        : 'name';
+
+    const sortOrder = query.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    qb.orderBy(`user.${sortBy}`, sortOrder);
+
+    qb.skip(skip).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        totalItems: total,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+  }
+
+  async findOne(
+    id: string,
+    companyId: string,
+  ): Promise<ResponseDto<UserResponseDto>> {
+    const user = await this.userRepository.findOne({
+      where: { id, company: { id: companyId } },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    return {
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company,
+      },
+    };
+  }
+
+  async findDeletedOne(
+    id: string,
+    companyId: string,
+  ): Promise<ResponseDto<UserResponseDto>> {
+    const user = await this.userRepository.findOne({
+      where: { id, company: { id: companyId } },
+      withDeleted: true,
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário excluído não encontrado.');
+    }
+
+    return {
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company,
+      },
+    };
+  }
+
   async update(
     id: string,
     updateUserDto: UpdateUserDto,
+    companyId: string,
   ): Promise<ResponseDto<UserResponseDto>> {
     try {
-      const userData = {
-        name: updateUserDto?.name,
-        email: updateUserDto?.email,
-        role: updateUserDto?.role,
-      };
-
-      if (updateUserDto?.password) {
-        const passwordHash = await this.hashingService.hash(
-          updateUserDto.password,
-        );
-        userData['passwordHash'] = passwordHash;
-      }
-
-      const user = await this.userRepository.preload({
-        id,
-        ...userData,
+      const user = await this.userRepository.findOne({
+        where: {
+          id,
+          company: { id: companyId },
+        },
       });
 
       if (!user) {
         throw new NotFoundException('Usuário não encontrado.');
+      }
+      if (updateUserDto.name !== undefined) {
+        user.name = updateUserDto.name;
+      }
+
+      if (updateUserDto.email !== undefined) {
+        user.email = updateUserDto.email;
+      }
+
+      if (updateUserDto.role !== undefined) {
+        user.role = updateUserDto.role;
+      }
+
+      if (updateUserDto.password !== undefined) {
+        const passwordHash = await this.hashingService.hash(
+          updateUserDto.password,
+        );
+        user.passwordHash = passwordHash;
       }
 
       const updateUser = await this.userRepository.save(user);
@@ -174,7 +259,7 @@ export class UserService {
     }
   }
 
-  async remove(
+  async softRemove(
     id: string,
     companyId: string,
   ): Promise<ResponseDto<UserResponseDto>> {
@@ -186,16 +271,55 @@ export class UserService {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    const removedUser = await this.userRepository.remove(user);
+    await this.userRepository.softRemove(user);
 
     return {
       data: {
-        id: removedUser.id,
-        name: removedUser.name,
-        email: removedUser.email,
-        role: removedUser.role,
-        company: removedUser.company,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company,
       },
     };
+  }
+
+  async recover(
+    id: string,
+    companyId: string,
+  ): Promise<ResponseDto<UserResponseDto>> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id,
+        company: { id: companyId },
+      },
+      withDeleted: true,
+    });
+
+    if (!user || !user.deletedAt) {
+      throw new NotFoundException('Usuário excluído não encontrado.');
+    }
+
+    try {
+      await this.userRepository.recover(user);
+
+      return {
+        data: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          company: user.company,
+        },
+      };
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException(
+          'Não foi possível recuperar esse usuário, pois já existe outro usuário ativo com esse e-mail.',
+        );
+      }
+
+      throw error;
+    }
   }
 }
