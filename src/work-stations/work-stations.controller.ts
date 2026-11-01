@@ -21,13 +21,14 @@ import { TokenPayloadDto } from 'src/auth/dtos/token-payload.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { PaginatedQueryDto } from 'src/common/dtos/paginated-query.dto';
 import { UpdateWorkStationDto } from './dtos/update-work-station.dto';
+import { UserRoles } from 'src/enums/user-roles.enum';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('work-stations')
 export class WorkStationsController {
   constructor(private readonly workStationsService: WorkStationsService) {}
 
-  @Roles('rh', 'manager', 'super_admin')
+  @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Post()
   create(
     @Body() createWorkStationDto: CreateWorkStationDto,
@@ -39,8 +40,12 @@ export class WorkStationsController {
     );
   }
 
-  @Roles('supervisor', 'rh', 'manager', 'super_admin')
-  @Get()
+  @Roles(
+    UserRoles.SUPERVISOR,
+    UserRoles.RH,
+    UserRoles.MANAGER,
+    UserRoles.SUPER_ADMIN,
+  )
   findAll(
     @Query() query: PaginatedQueryDto,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
@@ -48,7 +53,20 @@ export class WorkStationsController {
     return this.workStationsService.findAll(query, tokenPayloadDto.companyId);
   }
 
-  @Roles('supervisor', 'rh', 'manager', 'super_admin')
+  @Roles(UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
+  findAllDeleted(
+    @Query() query: PaginatedQueryDto,
+    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+  ) {
+    return this.workStationsService.findAll(query, tokenPayloadDto.companyId);
+  }
+
+  @Roles(
+    UserRoles.SUPERVISOR,
+    UserRoles.RH,
+    UserRoles.MANAGER,
+    UserRoles.SUPER_ADMIN,
+  )
   @Get(':id')
   findOne(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -57,7 +75,19 @@ export class WorkStationsController {
     return this.workStationsService.findOne(id, tokenPayloadDto.companyId);
   }
 
-  @Roles('rh', 'manager', 'super_admin')
+  @Roles(UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
+  @Get(':id')
+  findDeletedOne(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+  ) {
+    return this.workStationsService.findDeletedOne(
+      id,
+      tokenPayloadDto.companyId,
+    );
+  }
+
+  @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Patch(':id')
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -71,13 +101,22 @@ export class WorkStationsController {
     );
   }
 
-  @Roles('rh', 'manager', 'super_admin')
+  @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @Delete(':id')
-  remove(
+  softRemove(
     @Param('id', new ParseUUIDPipe()) id: string,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
   ) {
-    return this.workStationsService.remove(id, tokenPayloadDto.companyId);
+    return this.workStationsService.softRemove(id, tokenPayloadDto.companyId);
+  }
+
+  @Roles(UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
+  @Patch(':id/recover')
+  recover(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+  ) {
+    return this.workStationsService.recover(id, tokenPayloadDto.companyId);
   }
 }

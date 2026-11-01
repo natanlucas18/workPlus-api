@@ -36,7 +36,7 @@ export class Employee {
   })
   shift: EmployeeShift;
 
-  @DeleteDateColumn({ name: 'deleted_at' })
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deleteAt: Date | null;
 
   @ManyToOne(() => Company, (company) => company.employees)

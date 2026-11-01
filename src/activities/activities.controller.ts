@@ -19,13 +19,19 @@ import { tokenPayloadParams } from 'src/auth/decorators/token-payload.decorator'
 import { TokenPayloadDto } from 'src/auth/dtos/token-payload.dto';
 import { PaginatedQueryDto } from 'src/common/dtos/paginated-query.dto';
 import { UpdateActivityDto } from './dtos/update-activity.dto';
+import { UserRoles } from 'src/enums/user-roles.enum';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('activities')
 export class ActivitiesController {
   constructor(private readonly activitiesService: ActivitiesService) {}
 
-  @Roles('supervisor', 'rh', 'manager', 'super_admin')
+  @Roles(
+    UserRoles.SUPERVISOR,
+    UserRoles.RH,
+    UserRoles.MANAGER,
+    UserRoles.SUPER_ADMIN,
+  )
   @Post()
   create(
     @Body() createActivityDto: CreateActivityDto,
@@ -37,7 +43,12 @@ export class ActivitiesController {
     );
   }
 
-  @Roles('supervisor', 'rh', 'manager', 'super_admin')
+  @Roles(
+    UserRoles.SUPERVISOR,
+    UserRoles.RH,
+    UserRoles.MANAGER,
+    UserRoles.SUPER_ADMIN,
+  )
   @Get()
   findAll(
     @Query() query: PaginatedQueryDto,
@@ -46,7 +57,7 @@ export class ActivitiesController {
     return this.activitiesService.findAll(query, tokenPayloadDto.companyId);
   }
 
-  @Roles('rh', 'manager', 'super_admin')
+  @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Get('deleted')
   findAllDeleted(
     @Query() query: PaginatedQueryDto,
@@ -58,7 +69,12 @@ export class ActivitiesController {
     );
   }
 
-  @Roles('supervisor', 'rh', 'manager', 'super_admin')
+  @Roles(
+    UserRoles.SUPERVISOR,
+    UserRoles.RH,
+    UserRoles.MANAGER,
+    UserRoles.SUPER_ADMIN,
+  )
   @Get(':id')
   findOne(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -67,7 +83,7 @@ export class ActivitiesController {
     return this.activitiesService.findOne(id, tokenPayloadDto.companyId);
   }
 
-  @Roles('rh', 'manager', 'super_admin')
+  @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Get('deleted/:id')
   findDeletedOne(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -76,7 +92,12 @@ export class ActivitiesController {
     return this.activitiesService.findDeletedOne(id, tokenPayloadDto.companyId);
   }
 
-  @Roles('supervisor', 'rh', 'manager', 'super_admin')
+  @Roles(
+    UserRoles.SUPERVISOR,
+    UserRoles.RH,
+    UserRoles.MANAGER,
+    UserRoles.SUPER_ADMIN,
+  )
   @Patch(':id')
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -90,7 +111,12 @@ export class ActivitiesController {
     );
   }
 
-  @Roles('supervisor', 'rh', 'manager', 'super_admin')
+  @Roles(
+    UserRoles.SUPERVISOR,
+    UserRoles.RH,
+    UserRoles.MANAGER,
+    UserRoles.SUPER_ADMIN,
+  )
   @Delete(':id')
   softRemove(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -99,7 +125,7 @@ export class ActivitiesController {
     return this.activitiesService.softRemove(id, tokenPayloadDto.companyId);
   }
 
-  @Roles('rh', 'manager', 'super_admin')
+  @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Patch(':id/recover')
   recover(
     @Param('id', new ParseUUIDPipe()) id: string,

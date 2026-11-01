@@ -26,7 +26,7 @@ export class WorkStation {
   @Column({ type: 'varchar', length: 255 })
   supervisor: string;
 
-  @DeleteDateColumn({ name: 'deleted_at' })
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt: Date | null;
 
   @ManyToOne(() => Company, (company) => company.workStations)

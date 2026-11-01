@@ -57,19 +57,25 @@ export class EmployeesService {
   async findAll(
     query: PaginatedQueryDto,
     companyId: string,
-  ): Promise<PaginatedResponseDto<Employee>> {
+  ): Promise<PaginatedResponseDto<EmployeeResponseDto>> {
     const page = Math.max(1, Number(query.page || 1));
     const limit = Math.min(50, Math.max(1, Number(query.limit || 10)));
     const skip = (page - 1) * limit;
 
     const qb = this.employeeRepository
       .createQueryBuilder('employee')
-      .where('employee.company.id = :companyId', { companyId });
+      .where('employee.company_id = :companyId', { companyId });
 
-    if (query.search) {
-      qb.andWhere('employee.name ILIKE :search', {
-        search: `%${query.search}%`,
-      });
+    if (query.search?.trim()) {
+      qb.andWhere(
+        `(
+          employee.name ILIKE :search OR
+          employee.registration ILIKE :search
+        )`,
+        {
+          search: `%${query.search.trim()}%`,
+        },
+      );
     }
 
     const allowedSortBy = ['registration', 'name', 'dateOfBirth', 'shift'];
@@ -79,7 +85,7 @@ export class EmployeesService {
         ? query.sortBy
         : 'name';
 
-    const sortOrder = query.sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    const sortOrder = query.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     qb.orderBy(`employee.${sortBy}`, sortOrder);
     qb.skip(skip).take(limit);
@@ -89,7 +95,74 @@ export class EmployeesService {
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data,
+      data: data.map((item) => ({
+        id: item.id,
+        registration: item.registration,
+        name: item.name,
+        dateOfBirth: item.dateOfBirth,
+        shift: item.shift,
+      })),
+      meta: {
+        page,
+        limit,
+        totalItems: total,
+        totalPages,
+        hasPreviousPage: totalPages > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+  }
+
+  async findAllDeleted(
+    query: PaginatedQueryDto,
+    companyId: string,
+  ): Promise<PaginatedResponseDto<EmployeeResponseDto>> {
+    const page = Math.max(1, Number(query.page || 1));
+    const limit = Math.min(50, Math.max(1, Number(query.limit || 10)));
+    const skip = (page - 1) * limit;
+
+    const qb = this.employeeRepository
+      .createQueryBuilder('employee')
+      .withDeleted()
+      .where('employee.company_id = :companyId', { companyId })
+      .andWhere('employee.deleted_at IS NOT NULL');
+
+    if (query.search?.trim()) {
+      qb.andWhere(
+        `(
+          employee.name ILIKE :search OR
+          employee.registration ILIKE :search
+        )`,
+        {
+          search: `%${query.search.trim()}%`,
+        },
+      );
+    }
+
+    const allowedSortBy = ['registration', 'name', 'dateOfBirth', 'shift'];
+
+    const sortBy =
+      query.sortBy && allowedSortBy.includes(query.sortBy)
+        ? query.sortBy
+        : 'name';
+
+    const sortOrder = query.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    qb.orderBy(`employee.${sortBy}`, sortOrder);
+    qb.skip(skip).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: data.map((item) => ({
+        id: item.id,
+        registration: item.registration,
+        name: item.name,
+        dateOfBirth: item.dateOfBirth,
+        shift: item.shift,
+      })),
       meta: {
         page,
         limit,
@@ -124,6 +197,30 @@ export class EmployeesService {
     };
   }
 
+  async findDeletedOne(
+    id: string,
+    companyId: string,
+  ): Promise<ResponseDto<EmployeeResponseDto>> {
+    const employee = await this.employeeRepository.findOne({
+      where: { id, company: { id: companyId } },
+      withDeleted: true,
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Funcionário excluído não encontrado.');
+    }
+
+    return {
+      data: {
+        id: employee.id,
+        registration: employee.registration,
+        name: employee.name,
+        dateOfBirth: employee.dateOfBirth,
+        shift: employee.shift,
+      },
+    };
+  }
+
   async update(
     id: string,
     updateEmployeeDto: UpdateEmployeeDto,
@@ -143,7 +240,7 @@ export class EmployeesService {
     try {
       Object.assign(employee, updateEmployeeDto);
 
-      if (updateEmployeeDto.dateOfBirth) {
+      if (updateEmployeeDto.dateOfBirth !== undefined) {
         employee.dateOfBirth = new Date(updateEmployeeDto.dateOfBirth);
       }
 
@@ -167,7 +264,7 @@ export class EmployeesService {
     }
   }
 
-  async remove(
+  async softRemove(
     id: string,
     companyId: string,
   ): Promise<ResponseDto<EmployeeResponseDto>> {
@@ -189,5 +286,43 @@ export class EmployeesService {
         shift: removedEmployee.shift,
       },
     };
+  }
+
+  async recover(
+    id: string,
+    companyId: string,
+  ): Promise<ResponseDto<EmployeeResponseDto>> {
+    const employee = await this.employeeRepository.findOne({
+      where: {
+        id,
+        company: { id: companyId },
+      },
+      withDeleted: true,
+    });
+
+    if (!employee || !employee.deleteAt) {
+      throw new NotFoundException('Funcionário excluído não encontrado.');
+    }
+
+    try {
+      await this.employeeRepository.recover(employee);
+      return {
+        data: {
+          id: employee.id,
+          registration: employee.registration,
+          name: employee.name,
+          dateOfBirth: employee.dateOfBirth,
+          shift: employee.shift,
+        },
+      };
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException(
+          'Não foi possível recuperar o funcionário, pois já existe um funcionário com esse registro.',
+        );
+      }
+
+      throw error;
+    }
   }
 }

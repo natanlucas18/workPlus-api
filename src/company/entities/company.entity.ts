@@ -7,6 +7,7 @@ import { WorkStation } from 'src/work-stations/entities/work-station.entity';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   OneToMany,
@@ -23,7 +24,10 @@ export class Company {
   name: string;
 
   @CreateDateColumn()
-  createdAt?: Date;
+  createdAt: Date | null;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date | null;
 
   @Column({ default: true })
   isActive: boolean;
