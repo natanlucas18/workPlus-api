@@ -1,7 +1,9 @@
 import { Company } from 'src/company/entities/company.entity';
+import { UserRoles } from 'src/enums/user-roles.enum';
 import { ExtraEarning } from 'src/extra-earnings/entities/extra-earnings.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -25,8 +27,12 @@ export class User {
   @Column()
   passwordHash: string;
 
-  @Column({ default: 'supervisor' })
-  role: 'supervisor' | 'rh' | 'manager' | 'super_admin';
+  @Column({
+    type: 'enum',
+    enum: UserRoles,
+    default: UserRoles.SUPERVISOR,
+  })
+  role: UserRoles;
 
   @Column({ default: true })
   isActive: boolean;
@@ -39,4 +45,7 @@ export class User {
 
   @OneToMany(() => ExtraEarning, (extraEarnings) => extraEarnings.addedBy)
   extraEarnings: ExtraEarning[];
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date | null;
 }
