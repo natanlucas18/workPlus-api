@@ -3,8 +3,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import globalConfig from './global.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CompanyModule } from './company/company.module';
-import { UserModule } from './users/users.module';
+import { CompaniesModule } from './company/companies.module';
+import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EmployeesModule } from './employees/employees.module';
 import { WorkStationsModule } from './work-stations/work-stations.module';
@@ -39,8 +39,8 @@ import { ExtraEarningsModule } from './extra-earnings/extra-earnings.module';
         };
       },
     }),
-    CompanyModule,
-    UserModule,
+    CompaniesModule,
+    UsersModule,
     AuthModule,
     EmployeesModule,
     WorkStationsModule,
