@@ -22,8 +22,10 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { PaginatedQueryDto } from 'src/common/dtos/paginated-query.dto';
 import { UpdateWorkStationDto } from './dtos/update-work-station.dto';
 import { UserRoles } from 'src/enums/user-roles.enum';
+import { CompanyContextGuard } from 'src/company-context/company-context.guard';
+import { CompanyId } from 'src/company-context/company-id.decorator';
 
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), RolesGuard, CompanyContextGuard)
 @Controller('work-stations')
 export class WorkStationsController {
   constructor(private readonly workStationsService: WorkStationsService) {}
@@ -32,12 +34,9 @@ export class WorkStationsController {
   @Post()
   create(
     @Body() createWorkStationDto: CreateWorkStationDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.workStationsService.create(
-      createWorkStationDto,
-      tokenPayloadDto.companyId,
-    );
+    return this.workStationsService.create(createWorkStationDto, companyId);
   }
 
   @Roles(
@@ -46,19 +45,16 @@ export class WorkStationsController {
     UserRoles.MANAGER,
     UserRoles.SUPER_ADMIN,
   )
-  findAll(
-    @Query() query: PaginatedQueryDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
-  ) {
-    return this.workStationsService.findAll(query, tokenPayloadDto.companyId);
+  findAll(@Query() query: PaginatedQueryDto, @CompanyId() companyId: string) {
+    return this.workStationsService.findAll(query, companyId);
   }
 
   @Roles(UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   findAllDeleted(
     @Query() query: PaginatedQueryDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.workStationsService.findAll(query, tokenPayloadDto.companyId);
+    return this.workStationsService.findAll(query, companyId);
   }
 
   @Roles(
@@ -70,21 +66,18 @@ export class WorkStationsController {
   @Get(':id')
   findOne(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.workStationsService.findOne(id, tokenPayloadDto.companyId);
+    return this.workStationsService.findOne(id, companyId);
   }
 
   @Roles(UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Get(':id')
   findDeletedOne(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.workStationsService.findDeletedOne(
-      id,
-      tokenPayloadDto.companyId,
-    );
+    return this.workStationsService.findDeletedOne(id, companyId);
   }
 
   @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
@@ -92,13 +85,9 @@ export class WorkStationsController {
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateWorkStationDto: UpdateWorkStationDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.workStationsService.update(
-      id,
-      updateWorkStationDto,
-      tokenPayloadDto.companyId,
-    );
+    return this.workStationsService.update(id, updateWorkStationDto, companyId);
   }
 
   @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
@@ -106,17 +95,17 @@ export class WorkStationsController {
   @Delete(':id')
   softRemove(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.workStationsService.softRemove(id, tokenPayloadDto.companyId);
+    return this.workStationsService.softRemove(id, companyId);
   }
 
   @Roles(UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Patch(':id/recover')
   recover(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.workStationsService.recover(id, tokenPayloadDto.companyId);
+    return this.workStationsService.recover(id, companyId);
   }
 }

@@ -20,8 +20,10 @@ import { TokenPayloadDto } from 'src/auth/dtos/token-payload.dto';
 import { PaginatedQueryDto } from 'src/common/dtos/paginated-query.dto';
 import { UpdateEmployeeDto } from './dtos/update-employee.dto';
 import { UserRoles } from 'src/enums/user-roles.enum';
+import { CompanyContextGuard } from 'src/company-context/company-context.guard';
+import { CompanyId } from 'src/company-context/company-id.decorator';
 
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), RolesGuard, CompanyContextGuard)
 @Controller('employees')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
@@ -30,12 +32,9 @@ export class EmployeesController {
   @Post()
   create(
     @Body() createEmployeeDto: CreateEmployeeDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.employeesService.create(
-      createEmployeeDto,
-      tokenPayloadDto.companyId,
-    );
+    return this.employeesService.create(createEmployeeDto, companyId);
   }
 
   @Roles(
@@ -45,23 +44,17 @@ export class EmployeesController {
     UserRoles.SUPER_ADMIN,
   )
   @Get()
-  findAll(
-    @Query() query: PaginatedQueryDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
-  ) {
-    return this.employeesService.findAll(query, tokenPayloadDto.companyId);
+  findAll(@Query() query: PaginatedQueryDto, @CompanyId() companyId: string) {
+    return this.employeesService.findAll(query, companyId);
   }
 
   @Roles(UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Get('deleted')
   findAllDeleted(
     @Query() query: PaginatedQueryDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.employeesService.findAllDeleted(
-      query,
-      tokenPayloadDto.companyId,
-    );
+    return this.employeesService.findAllDeleted(query, companyId);
   }
 
   @Roles(
@@ -73,18 +66,18 @@ export class EmployeesController {
   @Get(':id')
   findOne(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.employeesService.findOne(id, tokenPayloadDto.companyId);
+    return this.employeesService.findOne(id, companyId);
   }
 
   @Roles(UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Get('deleted/:id')
   findDeletedOne(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.employeesService.findDeletedOne(id, tokenPayloadDto.companyId);
+    return this.employeesService.findDeletedOne(id, companyId);
   }
 
   @Roles(
@@ -97,13 +90,9 @@ export class EmployeesController {
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateEmployeeDto: UpdateEmployeeDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.employeesService.update(
-      id,
-      updateEmployeeDto,
-      tokenPayloadDto.companyId,
-    );
+    return this.employeesService.update(id, updateEmployeeDto, companyId);
   }
 
   @Roles(
@@ -115,17 +104,17 @@ export class EmployeesController {
   @Delete(':id')
   softRemove(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.employeesService.softRemove(id, tokenPayloadDto.companyId);
+    return this.employeesService.softRemove(id, companyId);
   }
 
   @Roles(UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Patch(':id/recover')
   recover(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.employeesService.recover(id, tokenPayloadDto.companyId);
+    return this.employeesService.recover(id, companyId);
   }
 }

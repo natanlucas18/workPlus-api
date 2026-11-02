@@ -20,8 +20,10 @@ import { tokenPayloadParams } from 'src/auth/decorators/token-payload.decorator'
 import { TokenPayloadDto } from 'src/auth/dtos/token-payload.dto';
 import { PaginatedQueryDto } from 'src/common/dtos/paginated-query.dto';
 import { UpdateExtraEarningDto } from './dtos/update-extra-earning.dto';
+import { CompanyContextGuard } from 'src/company-context/company-context.guard';
+import { CompanyId } from 'src/company-context/company-id.decorator';
 
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), RolesGuard, CompanyContextGuard)
 @Controller('extra-earnings')
 export class ExtraEarningsController {
   constructor(private readonly extraEarningsService: ExtraEarningsService) {}
@@ -36,10 +38,11 @@ export class ExtraEarningsController {
   create(
     @Body() createExtraEarningDto: CreateExtraEarningDto,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
     return this.extraEarningsService.create(
       createExtraEarningDto,
-      tokenPayloadDto.companyId,
+      companyId,
       tokenPayloadDto.sub,
     );
   }
@@ -51,23 +54,17 @@ export class ExtraEarningsController {
     UserRoles.SUPER_ADMIN,
   )
   @Get()
-  findAll(
-    @Query() query: PaginatedQueryDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
-  ) {
-    return this.extraEarningsService.findAll(query, tokenPayloadDto.companyId);
+  findAll(@Query() query: PaginatedQueryDto, @CompanyId() companyId: string) {
+    return this.extraEarningsService.findAll(query, companyId);
   }
 
   @Roles(UserRoles.SUPER_ADMIN)
   @Get('deleted')
   findAllDeleted(
     @Query() query: PaginatedQueryDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.extraEarningsService.findAllDeleted(
-      query,
-      tokenPayloadDto.companyId,
-    );
+    return this.extraEarningsService.findAllDeleted(query, companyId);
   }
 
   @Roles(
@@ -79,21 +76,18 @@ export class ExtraEarningsController {
   @Get(':id')
   findOne(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.extraEarningsService.findOne(id, tokenPayloadDto.companyId);
+    return this.extraEarningsService.findOne(id, companyId);
   }
 
   @Roles(UserRoles.SUPER_ADMIN)
   @Get('deleted/:id')
   findDeletedOne(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.extraEarningsService.findDeletedOne(
-      id,
-      tokenPayloadDto.companyId,
-    );
+    return this.extraEarningsService.findDeletedOne(id, companyId);
   }
 
   @Roles(
@@ -106,12 +100,12 @@ export class ExtraEarningsController {
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateExtraEarningDto: UpdateExtraEarningDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
     return this.extraEarningsService.update(
       id,
       updateExtraEarningDto,
-      tokenPayloadDto.companyId,
+      companyId,
     );
   }
 
@@ -124,17 +118,17 @@ export class ExtraEarningsController {
   @Delete(':id')
   softRemove(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.extraEarningsService.softRemove(id, tokenPayloadDto.companyId);
+    return this.extraEarningsService.softRemove(id, companyId);
   }
 
   @Roles(UserRoles.SUPER_ADMIN)
   @Patch(':id/recover')
   recover(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.extraEarningsService.recover(id, tokenPayloadDto.companyId);
+    return this.extraEarningsService.recover(id, companyId);
   }
 }
