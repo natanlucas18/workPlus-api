@@ -20,8 +20,10 @@ import { TokenPayloadDto } from 'src/auth/dtos/token-payload.dto';
 import { PaginatedQueryDto } from 'src/common/dtos/paginated-query.dto';
 import { UpdateActivityDto } from './dtos/update-activity.dto';
 import { UserRoles } from 'src/enums/user-roles.enum';
+import { CompanyContextGuard } from 'src/company-context/company-context.guard';
+import { CompanyId } from 'src/company-context/company-id.decorator';
 
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), RolesGuard, CompanyContextGuard)
 @Controller('activities')
 export class ActivitiesController {
   constructor(private readonly activitiesService: ActivitiesService) {}
@@ -35,12 +37,9 @@ export class ActivitiesController {
   @Post()
   create(
     @Body() createActivityDto: CreateActivityDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.activitiesService.create(
-      createActivityDto,
-      tokenPayloadDto.companyId,
-    );
+    return this.activitiesService.create(createActivityDto, companyId);
   }
 
   @Roles(
@@ -50,23 +49,17 @@ export class ActivitiesController {
     UserRoles.SUPER_ADMIN,
   )
   @Get()
-  findAll(
-    @Query() query: PaginatedQueryDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
-  ) {
-    return this.activitiesService.findAll(query, tokenPayloadDto.companyId);
+  findAll(@Query() query: PaginatedQueryDto, @CompanyId() companyId: string) {
+    return this.activitiesService.findAll(query, companyId);
   }
 
   @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Get('deleted')
   findAllDeleted(
     @Query() query: PaginatedQueryDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.activitiesService.findAllDeleted(
-      query,
-      tokenPayloadDto.companyId,
-    );
+    return this.activitiesService.findAllDeleted(query, companyId);
   }
 
   @Roles(
@@ -78,18 +71,18 @@ export class ActivitiesController {
   @Get(':id')
   findOne(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.activitiesService.findOne(id, tokenPayloadDto.companyId);
+    return this.activitiesService.findOne(id, companyId);
   }
 
   @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Get('deleted/:id')
   findDeletedOne(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.activitiesService.findDeletedOne(id, tokenPayloadDto.companyId);
+    return this.activitiesService.findDeletedOne(id, companyId);
   }
 
   @Roles(
@@ -102,13 +95,9 @@ export class ActivitiesController {
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateActivityDto: UpdateActivityDto,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.activitiesService.update(
-      id,
-      updateActivityDto,
-      tokenPayloadDto.companyId,
-    );
+    return this.activitiesService.update(id, updateActivityDto, companyId);
   }
 
   @Roles(
@@ -120,17 +109,17 @@ export class ActivitiesController {
   @Delete(':id')
   softRemove(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.activitiesService.softRemove(id, tokenPayloadDto.companyId);
+    return this.activitiesService.softRemove(id, companyId);
   }
 
   @Roles(UserRoles.RH, UserRoles.MANAGER, UserRoles.SUPER_ADMIN)
   @Patch(':id/recover')
   recover(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
+    @CompanyId() companyId: string,
   ) {
-    return this.activitiesService.recover(id, tokenPayloadDto.companyId);
+    return this.activitiesService.recover(id, companyId);
   }
 }
