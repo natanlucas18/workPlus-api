@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Employee } from './entities/employee.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { PaginatedQueryDto } from 'src/common/dtos/paginated-query.dto';
 import { PaginatedResponseDto } from 'src/common/dtos/paginated-response.dto';
 import { ResponseDto } from 'src/common/dtos/response.dto';
@@ -70,7 +70,7 @@ export class EmployeesService {
       qb.andWhere(
         `(
           employee.name ILIKE :search OR
-          employee.registration ILIKE :search
+          CAST(employee.registration AS TEXT) ILIKE :search
         )`,
         {
           search: `%${query.search.trim()}%`,
@@ -107,7 +107,7 @@ export class EmployeesService {
         limit,
         totalItems: total,
         totalPages,
-        hasPreviousPage: totalPages > 1,
+        hasPreviousPage: page > 1,
         hasNextPage: page < totalPages,
       },
     };
@@ -131,7 +131,7 @@ export class EmployeesService {
       qb.andWhere(
         `(
           employee.name ILIKE :search OR
-          employee.registration ILIKE :search
+          CAST(employee.registration AS TEXT) ILIKE :search
         )`,
         {
           search: `%${query.search.trim()}%`,
@@ -168,7 +168,7 @@ export class EmployeesService {
         limit,
         totalItems: total,
         totalPages,
-        hasPreviousPage: totalPages > 1,
+        hasPreviousPage: page > 1,
         hasNextPage: page < totalPages,
       },
     };
@@ -202,7 +202,7 @@ export class EmployeesService {
     companyId: string,
   ): Promise<ResponseDto<EmployeeResponseDto>> {
     const employee = await this.employeeRepository.findOne({
-      where: { id, company: { id: companyId } },
+      where: { id, company: { id: companyId }, deletedAt: Not(IsNull()) },
       withDeleted: true,
     });
 
@@ -300,7 +300,7 @@ export class EmployeesService {
       withDeleted: true,
     });
 
-    if (!employee || !employee.deleteAt) {
+    if (!employee || !employee.deletedAt) {
       throw new NotFoundException('Funcionário excluído não encontrado.');
     }
 
