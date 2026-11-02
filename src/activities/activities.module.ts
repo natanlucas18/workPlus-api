@@ -5,10 +5,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Activity } from './entities/activity.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { WorkStation } from 'src/work-stations/entities/work-station.entity';
+import { Company } from 'src/company/entities/company.entity';
+import { CompanyContextGuard } from 'src/company-context/company-context.guard';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Activity, WorkStation]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([Activity, WorkStation, Company]),
+    AuthModule,
+  ],
   controllers: [ActivitiesController],
-  providers: [ActivitiesService],
+  providers: [ActivitiesService, CompanyContextGuard],
 })
 export class ActivitiesModule {}
