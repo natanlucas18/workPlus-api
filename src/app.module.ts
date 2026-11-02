@@ -12,6 +12,7 @@ import { ActivitiesModule } from './activities/activities.module';
 import { PayPeriodsModule } from './pay-periods/pay-periods.module';
 import { ExtraEarningsModule } from './extra-earnings/extra-earnings.module';
 import { AdminModule } from './admin/admin.module';
+import { CompanyContextModule } from './company-context/company-context.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { AdminModule } from './admin/admin.module';
     UsersModule,
     AuthModule,
     EmployeesModule,
+    CompanyContextModule,
     WorkStationsModule,
     ActivitiesModule,
     PayPeriodsModule,

@@ -6,4 +6,5 @@ export interface AuthRequest extends Request {
   user?: User & {
     tokenPayload?: JwtPayload;
   };
+  companyId?: string;
 }
