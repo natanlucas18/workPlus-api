@@ -7,7 +7,8 @@ export default registerAs('global', () => ({
     port: Number(process.env.DATABASE_PORT),
     username: String(process.env.DATABASE_USERNAME),
     password: String(process.env.DATABASE_PASSWORD),
+    database: String(process.env.DATABASE_DATABASE),
     autoLoadEntities: Boolean(process.env.AUTO_LOAD_ENTITIES),
-    synchronize: Boolean(process.env.SYCHRONIZE),
+    synchronize: Boolean(process.env.SYNCHRONIZE),
   },
 }));

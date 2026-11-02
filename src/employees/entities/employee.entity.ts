@@ -15,6 +15,7 @@ import {
 @Entity('employees')
 @Index('idx_employees_company_registration', ['company', 'registration'], {
   unique: true,
+  where: '"deleted_at" IS NULL',
 })
 export class Employee {
   @PrimaryGeneratedColumn('uuid')
@@ -37,7 +38,7 @@ export class Employee {
   shift: EmployeeShift;
 
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
-  deleteAt: Date | null;
+  deletedAt: Date | null;
 
   @ManyToOne(() => Company, (company) => company.employees)
   @JoinColumn({ name: 'company_id' })

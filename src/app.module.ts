@@ -11,6 +11,7 @@ import { WorkStationsModule } from './work-stations/work-stations.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { PayPeriodsModule } from './pay-periods/pay-periods.module';
 import { ExtraEarningsModule } from './extra-earnings/extra-earnings.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -34,8 +35,9 @@ import { ExtraEarningsModule } from './extra-earnings/extra-earnings.module';
           port: globalConfigurations.database.port,
           username: globalConfigurations.database.username,
           password: globalConfigurations.database.password,
-          autoLoadEntities: globalConfigurations.database.autoLoadEntities,
-          synchronize: globalConfigurations.database.synchronize,
+          database: globalConfigurations.database.database,
+          autoLoadEntities: true,
+          synchronize: true,
         };
       },
     }),
@@ -47,6 +49,7 @@ import { ExtraEarningsModule } from './extra-earnings/extra-earnings.module';
     ActivitiesModule,
     PayPeriodsModule,
     ExtraEarningsModule,
+    AdminModule,
   ],
   controllers: [],
   providers: [],

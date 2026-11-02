@@ -58,7 +58,10 @@ export class EmployeesController {
     @Query() query: PaginatedQueryDto,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
   ) {
-    return this.employeesService.findAll(query, tokenPayloadDto.companyId);
+    return this.employeesService.findAllDeleted(
+      query,
+      tokenPayloadDto.companyId,
+    );
   }
 
   @Roles(
@@ -81,7 +84,7 @@ export class EmployeesController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
   ) {
-    return this.employeesService.findOne(id, tokenPayloadDto.companyId);
+    return this.employeesService.findDeletedOne(id, tokenPayloadDto.companyId);
   }
 
   @Roles(
@@ -111,7 +114,7 @@ export class EmployeesController {
   )
   @Delete(':id')
   softRemove(
-    @Param(':id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @tokenPayloadParams() tokenPayloadDto: TokenPayloadDto,
   ) {
     return this.employeesService.softRemove(id, tokenPayloadDto.companyId);
