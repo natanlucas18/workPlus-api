@@ -7,12 +7,21 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type { Request, Response } from 'express';
 import { ResponseLoginDto } from './dtos/response-login.dto';
 import { LoginDto } from './dtos/login.dto';
+import {
+  ApiCookieAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -39,6 +48,12 @@ export class AuthController {
     });
   }
 
+  @ApiOperation({ summary: 'autentica um usuário existente' })
+  @ApiResponse({ status: 200, description: 'Login efetuado com sucesso' })
+  @ApiResponse({ status: 401, description: 'Usuário não encontrado!' })
+  @ApiResponse({ status: 401, description: 'Usuário inativo!' })
+  @ApiResponse({ status: 401, description: 'Empresa suspensa!' })
+  @ApiResponse({ status: 401, description: 'Senha incorreta!' })
   @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(
@@ -57,6 +72,16 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({ summary: 'renova o accessToken' })
+  @ApiResponse({ status: 200, description: 'Renovação efetuada com sucesso' })
+  @ApiResponse({ status: 401, description: 'Refresh token inválido!' })
+  @ApiResponse({ status: 401, description: 'Usuário não autorizado!' })
+  @ApiResponse({
+    status: 409,
+    description: 'Refresh token inválido ou expirado.',
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiCookieAuth('accessToken')
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
   async refresh(
@@ -81,6 +106,10 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({ summary: 'Faz o logout do usuário limpando os cookie' })
+  @ApiResponse({ status: 200, description: 'Operação realizada com sucesso!' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiCookieAuth('accessToken')
   @HttpCode(HttpStatus.OK)
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
@@ -93,6 +122,6 @@ export class AuthController {
     res.clearCookie('accessToken', cookieOptions);
     res.clearCookie('refreshToken', cookieOptions);
     res.clearCookie('role', cookieOptions);
-    return;
+    return res.sendStatus(200);
   }
 }
